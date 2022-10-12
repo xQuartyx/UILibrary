@@ -1,3 +1,7 @@
+if game:GetService("CoreGui"):FindFirstChild("QuartyzHub") then
+    game:GetService("CoreGui"):FindFirstChild("QuartyzHub"):Destroy()
+end
+
 local InputService = game:GetService('UserInputService');
 local TextService = game:GetService('TextService');
 local TweenService = game:GetService('TweenService');
