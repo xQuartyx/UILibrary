@@ -1,7 +1,7 @@
 -- New example script written by wally
 -- You can suggest changes with a pull request or something
 
-local repo = 'https://raw.githubusercontent.com/xQuartyzx/UILibrary/main/LinoriaLib'
+local repo = 'https://raw.githubusercontent.com/xQuartyx/UILibrary/main/LinoriaLib'
 
 local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
 local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
