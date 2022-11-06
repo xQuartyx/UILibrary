@@ -34,10 +34,10 @@ local Library = {
     HudRegistry = {};
 
     FontColor = Color3.fromRGB(255, 255, 255);
-    MainColor = Color3.fromRGB(0, 0, 0);
-    BackgroundColor = Color3.fromRGB(18, 18, 18);
-    AccentColor = Color3.fromRGB(255, 255, 255);
-    OutlineColor = Color3.fromRGB(50, 50, 50);
+    MainColor = Color3.fromRGB(18, 39, 56);
+    BackgroundColor = Color3.fromRGB(25, 53, 73);
+    AccentColor = Color3.fromRGB(0, 225, 225);
+    OutlineColor = Color3.fromRGB(0, 225, 225);
 
     Black = Color3.new(0, 0, 0);
 
@@ -822,32 +822,34 @@ do
         end;
 
         function KeyPicker:Update()
-            if Info.NoUI then
-                return;
-            end;
-
-            local State = KeyPicker:GetState();
-
-            ContainerLabel.Text = string.format('[%s] %s (%s)', KeyPicker.Value, Info.Text, KeyPicker.Mode);
-
-            ContainerLabel.Visible = true;
-            ContainerLabel.TextColor3 = State and Library.AccentColor or Library.FontColor;
-
-            Library.RegistryMap[ContainerLabel].Properties.TextColor3 = State and 'AccentColor' or 'FontColor';
-
-            local YSize = 0
-            local XSize = 0
-            
-            for _, Label in next, Library.KeybindContainer:GetChildren() do
-                if Label:IsA('TextLabel') and Label.Visible then
-                    YSize = YSize + 18;
-                    if (Label.TextBounds.X > XSize) then
-                        XSize = Label.TextBounds.X 
-                    end 
+            pcall(function()
+                if Info.NoUI then
+                    return;
                 end;
-            end;
 
-            Library.KeybindFrame.Size = UDim2.new(0, math.max(XSize + 10, 210), 0, YSize + 23)
+                local State = KeyPicker:GetState();
+
+                ContainerLabel.Text = string.format('[%s] %s (%s)', KeyPicker.Value, Info.Text, KeyPicker.Mode);
+
+                ContainerLabel.Visible = true;
+                ContainerLabel.TextColor3 = State and Library.AccentColor or Library.FontColor;
+
+                Library.RegistryMap[ContainerLabel].Properties.TextColor3 = State and 'AccentColor' or 'FontColor';
+
+                local YSize = 0
+                local XSize = 0
+                
+                for _, Label in next, Library.KeybindContainer:GetChildren() do
+                    if Label:IsA('TextLabel') and Label.Visible then
+                        YSize = YSize + 18;
+                        if (Label.TextBounds.X > XSize) then
+                            XSize = Label.TextBounds.X 
+                        end 
+                    end;
+                end;
+
+                Library.KeybindFrame.Size = UDim2.new(0, math.max(XSize + 10, 210), 0, YSize + 23)
+            end)
         end;
 
         function KeyPicker:GetState()
@@ -2564,15 +2566,29 @@ function Library:CreateWindow(...)
             BackgroundColor3 = 'MainColor';
         });
 
-        local TabFrame = Library:Create('Frame', {
-            Name = 'TabFrame',
+        local TabFrame = Library:Create('ScrollingFrame', {
             BackgroundTransparency = 1;
             Position = UDim2.new(0, 0, 0, 0);
             Size = UDim2.new(1, 0, 1, 0);
             Visible = false;
             ZIndex = 2;
+            ScrollBarImageTransparency = 0;
+            ScrollBarThickness = 5;
             Parent = TabContainer;
         });
+        local Sized = 0
+        table.insert(Library.Signals, TabFrame.ChildAdded:Connect(function(v)
+            table.insert(Library.Signals, v.ChildAdded:Connect(function(v)
+                if v:IsA("UIListLayout") then
+                    table.insert(Library.Signals, v:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                        if v.AbsoluteContentSize.Y > Sized then
+                            Sized = v.AbsoluteContentSize.Y
+                            TabFrame.CanvasSize = UDim2.fromOffset(0,v.AbsoluteContentSize.Y + 10)
+                        end
+                    end))
+                end;
+            end))
+        end))
 
         local LeftSide = Library:Create('Frame', {
             BackgroundTransparency = 1;
