@@ -396,7 +396,6 @@ function Library:Unload()
 end
 
 function Library:OnUnload(Callback)
-    Library.Unloaded = true
     Library.OnUnload = Callback
 end
 
