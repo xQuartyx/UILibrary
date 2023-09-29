@@ -1861,7 +1861,7 @@ do
             Position = UDim2.new(1, 6, 0, 0);
             TextSize = 14;
             Text = Info.Text;
-            TextXAlignment = Enum.TextXAlignment.Left;
+            TextXAlignment = Info.TextAling or Enum.TextXAlignment.Left;
             ZIndex = 6;
             Parent = ToggleInner;
         });
