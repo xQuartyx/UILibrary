@@ -298,6 +298,8 @@ local Library = {
 	WindowFrame = nil,
 	Unloaded = false,
 
+	Creator = nil,
+
 	Theme = "Amethyst",
 	DialogOpen = false,
 	UseAcrylic = false,
@@ -930,6 +932,8 @@ function Creator.SpringMotor(Initial, Instance, Prop, IgnoreDialogCheck, ResetOn
 
 	return Motor, SetValue
 end
+
+Library.Creator = Creator
 
 local New = Creator.New
 
@@ -2716,7 +2720,7 @@ Components.Window = (function()
 					Duration = 6
 				})
 			end
-			SwapIco()
+			pcall(SwapIco)
 		end
 
 		function Window:Destroy()
@@ -4606,7 +4610,7 @@ local Icons = {
 	["lucide-croissant"] = "rbxassetid://10709818125",
 	["lucide-crop"] = "rbxassetid://10709818245",
 	["lucide-cross"] = "rbxassetid://10709818399",
-	["lucide-crosshair"] = "rbxassetid://17080615478",
+	["lucide-crosshair"] = "rbxassetid://10709818534",
 	["lucide-crown"] = "rbxassetid://10709818626",
 	["lucide-cup-soda"] = "rbxassetid://10709818763",
 	["lucide-curly-braces"] = "rbxassetid://10709818847",
@@ -5730,7 +5734,7 @@ local InterfaceManager = {} do
 end
 
 local ToggleLib;
-if game:GetService("CoreGui") and not game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame:FindFirstChild("LibToggle") then
+if game:GetService("CoreGui") and game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame:FindFirstChild("ChatIcon") and not game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame:FindFirstChild("LibToggle") then
 	ToggleLib = game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame.ChatIcon:Clone()
 	ToggleLib.Parent = game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame
 	ToggleLib.Name = "LibToggle"
@@ -5742,20 +5746,22 @@ else
 	ToggleLib = game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame:FindFirstChild("LibToggle")
 end
 
-local Background = ToggleLib.Background
-Background.Icon.Image = "rbxassetid://9886659671"
+if ToggleLib then
+	local Background = ToggleLib.Background
+	Background.Icon.Image = "rbxassetid://9886659671"
 
-function SwapIco()
-	if not Fluent.Window.Minimized then
-		Background.Icon.Image = "rbxassetid://17071506793"
-	else
-		Background.Icon.Image = "rbxassetid://9886659671"
+	function SwapIco()
+		if not Fluent.Window.Minimized then
+			Background.Icon.Image = "rbxassetid://17071506793"
+		else
+			Background.Icon.Image = "rbxassetid://9886659671"
+		end
 	end
-end
 
-Background.MouseButton1Click:Connect(function()
-	if not Fluent or not Fluent.Window then return end
-	Fluent.Window:Minimize()
-end)
+	Background.MouseButton1Click:Connect(function()
+		if not Fluent or not Fluent.Window then return end
+		Fluent.Window:Minimize()
+	end)
+end
 
 return Library, SaveManager, InterfaceManager
