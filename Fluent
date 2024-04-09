@@ -2716,6 +2716,7 @@ Components.Window = (function()
 					Duration = 6
 				})
 			end
+			SwapIco()
 		end
 
 		function Window:Destroy()
@@ -5728,37 +5729,33 @@ local InterfaceManager = {} do
 	end
 end
 
+local ToggleLib;
 if game:GetService("CoreGui") and not game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame:FindFirstChild("LibToggle") then
-	local ToggleLib = game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame.ChatIcon:Clone()
+	ToggleLib = game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame.ChatIcon:Clone()
 	ToggleLib.Parent = game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame
 	ToggleLib.Name = "LibToggle"
 
 	if ToggleLib:FindFirstChild("BadgeContainer") then
 		ToggleLib.BadgeContainer:Destroy()
 	end
-
-	local Background = ToggleLib.Background
-	Background.Icon.Image = "rbxassetid://9886659671"
-
-	function SwapIco()
-		if not Fluent.Window.Minimized then
-			Background.Icon.Image = "rbxassetid://17071506793"
-		else
-			Background.Icon.Image = "rbxassetid://9886659671"
-		end
-	end
-	
-	local Origin = Fluent.Window.Minimize
-	Fluent.Window.Minimize = function(...)
-		SwapIco()
-		return Origin(...)
-	end
-
-	Background.MouseButton1Click:Connect(function()
-		if not Fluent or not Fluent.Window then return end
-		SwapIco()
-		Fluent.Window:Minimize()
-	end)
+else
+	ToggleLib = game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame:FindFirstChild("LibToggle")
 end
+
+local Background = ToggleLib.Background
+Background.Icon.Image = "rbxassetid://9886659671"
+
+function SwapIco()
+	if not Fluent.Window.Minimized then
+		Background.Icon.Image = "rbxassetid://17071506793"
+	else
+		Background.Icon.Image = "rbxassetid://9886659671"
+	end
+end
+
+Background.MouseButton1Click:Connect(function()
+	if not Fluent or not Fluent.Window then return end
+	Fluent.Window:Minimize()
+end)
 
 return Library, SaveManager, InterfaceManager
