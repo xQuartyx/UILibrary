@@ -835,13 +835,17 @@ local function ApplyCustomProps(Object, Props)
 end
 
 function Creator.AddSignal(Signal, Function)
-	table.insert(Creator.Signals, Signal:Connect(Function))
+	local Connected = Signal:Connect(Function)
+	table.insert(Creator.Signals, Connected)
+	return Connected
 end
 
 function Creator.Disconnect()
 	for Idx = #Creator.Signals, 1, -1 do
 		local Connection = table.remove(Creator.Signals, Idx)
-		Connection:Disconnect()
+		if Connection.Disconnect then
+			Connection:Disconnect()
+		end
 	end
 end
 
@@ -3430,6 +3434,9 @@ ElementsTable.Paragraph = (function()
 		Paragraph.Frame.BackgroundTransparency = 0.92
 		Paragraph.Border.Transparency = 0.6
 
+		Paragraph.SetTitle = Paragraph.SetTitle
+		Paragraph.SetConetent = Paragraph.SetDesc
+
 		return Paragraph
 	end
 
@@ -5191,6 +5198,7 @@ local Icons = {
 	["lucide-zoom-out"] = "rbxassetid://10747384679",
 	["lucide-cat"] = "rbxassetid://16935650691",
 	["lucide-message-circle-question"] = "rbxassetid://16970049192",
+	["lucide-webhook"] = "rbxassetid://17320556264",
 }
 function Library:GetIcon(Name)
 	if Name ~= nil and Icons["lucide-" .. Name] then
@@ -5231,7 +5239,7 @@ function Library:CreateWindow(Config)
 	Library.Acrylic = Config.Acrylic or false
 	Library.Theme = Config.Theme or "Dark"
 	if Config.Acrylic then
-		Acrylic.init()
+		--Acrylic.init()
 	end
 
 	local Window = Components.Window({
@@ -5423,7 +5431,7 @@ local SaveManager = {} do
 		if not success then return false, "decode error" end
 
 		for _, option in next, decoded.objects do
-			if self.Parser[option.type] then
+			if self.Parser[option.type] and not self.Ignore[option.idx] then
 				task.spawn(function() self.Parser[option.type].Load(option.idx, option) end) -- task.spawn() so the config loading wont get stuck.
 			end
 		end
@@ -5733,35 +5741,133 @@ local InterfaceManager = {} do
 	end
 end
 
-local ToggleLib;
-if game:GetService("CoreGui") and game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame:FindFirstChild("ChatIcon") and not game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame:FindFirstChild("LibToggle") then
-	ToggleLib = game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame.ChatIcon:Clone()
-	ToggleLib.Parent = game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame
-	ToggleLib.Name = "LibToggle"
+local Dragging, DragInput, MousePos, StartPos = false
 
-	if ToggleLib:FindFirstChild("BadgeContainer") then
-		ToggleLib.BadgeContainer:Destroy()
+local MinimizeButton = New("TextButton", {
+	BackgroundTransparency = 1,
+	Size = UDim2.new(1, 0, 1, 0),
+	BorderSizePixel = 0
+}, {
+	New("UIPadding", {
+		PaddingBottom = UDim.new(0, 2),
+		PaddingLeft = UDim.new(0, 2),
+		PaddingRight = UDim.new(0, 2),
+		PaddingTop = UDim.new(0, 2),
+	}),
+	New("ImageLabel", {
+		Image = "rbxassetid://17071506793",
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundTransparency = 1,
+	}, {
+		New("UIAspectRatioConstraint", {
+			AspectRatio = 1,
+			AspectType = Enum.AspectType.FitWithinMaxSize,
+		})
+	})
+})
+
+local Minimizer = New("Frame", {
+	Parent = GUI,
+	Size = UDim2.new(0, 32, 0, 32),
+	Position = UDim2.new(0.45, 0, 0.025, 0),
+	BackgroundTransparency = 1,
+	ZIndex = 999999999,
+},
+{
+	New("Frame", {
+		BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundTransparency = 0.5,
+		BorderSizePixel = 0
+	}, {
+		New("UICorner", {
+			CornerRadius = UDim.new(0.25, 0),
+		}),
+		MinimizeButton
+	})
+})
+
+Creator.AddSignal(Minimizer.InputBegan, function(Input)
+	if
+		Input.UserInputType == Enum.UserInputType.MouseButton1
+		or Input.UserInputType == Enum.UserInputType.Touch
+	then
+		Dragging = true
+		MousePos = Input.Position
+		StartPos = Minimizer.Position
+
+		Input.Changed:Connect(function()
+			if Input.UserInputState == Enum.UserInputState.End then
+				Dragging = false
+			end
+		end)
 	end
-else
-	ToggleLib = game:GetService("CoreGui").TopBarApp.TopBarFrame.LeftFrame:FindFirstChild("LibToggle")
-end
+end)
 
-if ToggleLib then
-	local Background = ToggleLib.Background
-	Background.Icon.Image = "rbxassetid://9886659671"
+Creator.AddSignal(MinimizeButton.InputBegan, function(Input)
+	if
+		Input.UserInputType == Enum.UserInputType.MouseButton1
+		or Input.UserInputType == Enum.UserInputType.Touch
+	then
+		Dragging = true
+		MousePos = Input.Position
+		StartPos = Minimizer.Position
 
-	function SwapIco()
-		if not Fluent.Window.Minimized then
-			Background.Icon.Image = "rbxassetid://17071506793"
-		else
-			Background.Icon.Image = "rbxassetid://9886659671"
+		Input.Changed:Connect(function()
+			if Input.UserInputState == Enum.UserInputState.End then
+				Dragging = false
+			end
+		end)
+	end
+end)
+
+Creator.AddSignal(MinimizeButton.InputChanged, function(Input)
+	if
+		Input.UserInputType == Enum.UserInputType.MouseMovement
+		or Input.UserInputType == Enum.UserInputType.Touch
+	then
+		DragInput = Input
+	end
+end)
+Creator.AddSignal(Minimizer.InputChanged, function(Input)
+	if
+		Input.UserInputType == Enum.UserInputType.MouseMovement
+		or Input.UserInputType == Enum.UserInputType.Touch
+	then
+		DragInput = Input
+	end
+end)
+
+Creator.AddSignal(UserInputService.InputChanged, function(Input)
+	if Input == DragInput and Dragging then
+		local GuiInset = game:GetService("GuiService"):GetGuiInset()
+		local Delta = Input.Position - MousePos
+		local ViewportSize = workspace.Camera.ViewportSize
+		local CurrentX = StartPos.X.Scale + (Delta.X/ViewportSize.X)
+		local CurrentY = StartPos.Y.Scale + (Delta.Y/ViewportSize.Y)
+
+		if CurrentX<0 or CurrentX > (ViewportSize.X - Minimizer.AbsoluteSize.X)/ViewportSize.X then
+			if CurrentX < 0 then
+				CurrentX = 0
+			else
+				CurrentX = (ViewportSize.X - Minimizer.AbsoluteSize.X)/ViewportSize.X
+			end
 		end
-	end
 
-	Background.MouseButton1Click:Connect(function()
-		if not Fluent or not Fluent.Window then return end
-		Fluent.Window:Minimize()
-	end)
-end
+		if CurrentY < 0 or CurrentY > ((ViewportSize.Y + GuiInset.Y) - Minimizer.AbsoluteSize.Y)/(ViewportSize.Y + GuiInset.Y) then
+			if CurrentY < 0 then
+				CurrentY = 0
+			else
+				CurrentY = ((ViewportSize.Y + GuiInset.Y) - Minimizer.AbsoluteSize.Y)/(ViewportSize.Y + GuiInset.Y)
+			end
+		end
+		
+		Minimizer.Position = UDim2.fromScale(CurrentX, CurrentY)
+	end
+end)
+
+AddSignal(MinimizeButton.MouseButton1Click, function()
+	Library.Window:Minimize()
+end)
 
 return Library, SaveManager, InterfaceManager
