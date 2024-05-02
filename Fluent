@@ -19,6 +19,7 @@ local Themes = {
 		"Aqua",
 		"Amethyst",
 		"Rose",
+		"Sakura"
 	},
 	Dark = {
 		Name = "Dark",
@@ -129,6 +130,7 @@ local Themes = {
 		Input = Color3.fromRGB(200, 200, 200),
 		InputFocused = Color3.fromRGB(100, 100, 100),
 		InputIndicator = Color3.fromRGB(80, 80, 80),
+		InputIndicatorFocus = Color3.fromRGB(0, 103, 192),
 
 		Dialog = Color3.fromRGB(255, 255, 255),
 		DialogHolder = Color3.fromRGB(240, 240, 240),
@@ -176,6 +178,7 @@ local Themes = {
 		Input = Color3.fromRGB(110, 160, 160),
 		InputFocused = Color3.fromRGB(20, 10, 30),
 		InputIndicator = Color3.fromRGB(130, 170, 170),
+		InputIndicatorFocus = Color3.fromRGB(60, 165, 165),
 
 		Dialog = Color3.fromRGB(40, 80, 80),
 		DialogHolder = Color3.fromRGB(30, 60, 60),
@@ -223,6 +226,7 @@ local Themes = {
 		Input = Color3.fromRGB(140, 120, 160),
 		InputFocused = Color3.fromRGB(20, 10, 30),
 		InputIndicator = Color3.fromRGB(170, 150, 190),
+		InputIndicatorFocus = Color3.fromRGB(97, 62, 167),
 
 		Dialog = Color3.fromRGB(60, 45, 80),
 		DialogHolder = Color3.fromRGB(45, 30, 65),
@@ -270,6 +274,7 @@ local Themes = {
 		Input = Color3.fromRGB(200, 120, 170),
 		InputFocused = Color3.fromRGB(20, 10, 30),
 		InputIndicator = Color3.fromRGB(170, 150, 190),
+		InputIndicatorFocus = Color3.fromRGB(180, 55, 90),
 
 		Dialog = Color3.fromRGB(120, 50, 75),
 		DialogHolder = Color3.fromRGB(95, 40, 60),
@@ -282,6 +287,61 @@ local Themes = {
 
 		Text = Color3.fromRGB(240, 240, 240),
 		SubText = Color3.fromRGB(170, 170, 170),
+		Hover = Color3.fromRGB(200, 120, 170),
+		HoverChange = 0.04,
+	},
+	Sakura = {
+		Name = "Sakura",
+		Accent = Color3.fromRGB(252, 209, 215),
+
+		AcrylicMain = Color3.fromRGB(40, 40, 40),
+		AcrylicBorder = Color3.fromRGB(130, 90, 110),
+		AcrylicGradient = ColorSequence.new{
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(252, 209, 215)),
+			ColorSequenceKeypoint.new(0.25, Color3.fromRGB(255, 231, 222)),
+			ColorSequenceKeypoint.new(0.50, Color3.fromRGB(233, 177, 205)),
+			ColorSequenceKeypoint.new(0.75, Color3.fromRGB(195, 130, 158)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(86, 33, 53)),
+		},
+		AcrylicNoise = 0.92,
+
+		TitleBarLine = Color3.fromRGB(140, 85, 105),
+		Tab = Color3.fromRGB(132, 89, 95),
+
+		Element = Color3.fromRGB(220, 140, 190),
+		ElementBorder = Color3.fromRGB(110, 70, 85),
+		InElementBorder = Color3.fromRGB(120, 90, 90),
+		ElementTransparency = 0.86,
+
+		ToggleSlider = Color3.fromRGB(252, 209, 215),
+		ToggleToggled = Color3.fromRGB(252, 209, 215),
+		TransparenToggle = 0.5,
+
+		SliderRail = Color3.fromRGB(252, 209, 215),
+
+		DropdownFrame = Color3.fromRGB(252, 209, 215),
+		DropdownHolder = Color3.fromRGB(156, 103, 123),
+		DropdownBorder = Color3.fromRGB(90, 40, 55),
+		DropdownOption = Color3.fromRGB(252, 209, 215),
+
+		Keybind = Color3.fromRGB(200, 120, 170),
+
+		Input = Color3.fromRGB(200, 120, 170),
+		InputFocused = Color3.fromRGB(200, 200, 200),
+		InputIndicator = Color3.fromRGB(170, 150, 190),
+		InputIndicatorFocus = Color3.fromRGB(252,209,215),
+
+		Dialog = Color3.fromRGB(120, 50, 75),
+		DialogHolder = Color3.fromRGB(95, 40, 60),
+		DialogHolderLine = Color3.fromRGB(90, 35, 55),
+		DialogButton = Color3.fromRGB(120, 50, 75),
+		DialogButtonBorder = Color3.fromRGB(155, 90, 115),
+		DialogBorder = Color3.fromRGB(100, 70, 90),
+		DialogInput = Color3.fromRGB(135, 55, 80),
+		DialogInputLine = Color3.fromRGB(190, 160, 180),
+
+		Text = Color3.fromRGB(240, 240, 240),
+		SubText = Color3.fromRGB(220, 220, 220),
 		Hover = Color3.fromRGB(200, 120, 170),
 		HoverChange = 0.04,
 	}
@@ -300,7 +360,6 @@ local Library = {
 
 	Creator = nil,
 
-	Theme = "Amethyst",
 	DialogOpen = false,
 	UseAcrylic = false,
 	Acrylic = false,
@@ -2242,7 +2301,7 @@ Components.Textbox = (function()
 			Textbox.Indicator.Position = UDim2.new(0, 1, 1, 0)
 			Textbox.Indicator.BackgroundTransparency = 0
 			Creator.OverrideTag(Textbox.Frame, { BackgroundColor3 = Acrylic and "InputFocused" or "DialogHolder" })
-			Creator.OverrideTag(Textbox.Indicator, { BackgroundColor3 = "Accent" })
+			Creator.OverrideTag(Textbox.Indicator, { BackgroundColor3 = "InputIndicatorFocus" })
 		end)
 
 		Creator.AddSignal(Textbox.Input.FocusLost, function()
@@ -2906,7 +2965,7 @@ ElementsTable.Toggle = (function()
 			TweenService:Create(
 				ToggleSlider,
 				TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
-				{ BackgroundTransparency = Toggle.Value and 0 or 1 }
+				{ BackgroundTransparency = Toggle.Value and 0.45 or 1 }
 			):Play()
 			ToggleCircle.ImageTransparency = Toggle.Value and 0 or 0.5
 
@@ -5226,84 +5285,6 @@ end
 
 Library.Elements = Elements
 
-function Library:CreateWindow(Config)
-	assert(Config.Title, "Window - Missing Title")
-
-	if Library.Window then
-		print("You cannot create more than one window.")
-		return
-	end
-
-	Library.MinimizeKey = Config.MinimizeKey or Enum.KeyCode.LeftControl
-	Library.UseAcrylic = Config.Acrylic or false
-	Library.Acrylic = Config.Acrylic or false
-	Library.Theme = Config.Theme or "Dark"
-	if Config.Acrylic then
-		--Acrylic.init()
-	end
-
-	local Window = Components.Window({
-		Parent = GUI,
-		Size = Config.Size,
-		Title = Config.Title,
-		SubTitle = Config.SubTitle,
-		TabWidth = Config.TabWidth,
-	})
-
-	Library.Window = Window
-	Library:SetTheme(Config.Theme)
-
-	return Window
-end
-
-function Library:SetTheme(Value)
-	if Library.Window and table.find(Library.Themes, Value) then
-		Library.Theme = Value
-		Creator.UpdateTheme()
-	end
-end
-
-function Library:Destroy()
-	if Library.Window then
-		Library.Unloaded = true
-		if Library.UseAcrylic then
-			Library.Window.AcrylicPaint.Model:Destroy()
-		end
-		Creator.Disconnect()
-		Library.GUI:Destroy()
-	end
-end
-
-function Library:ToggleAcrylic(Value)
-	if Library.Window then
-		if Library.UseAcrylic then
-			Library.Acrylic = Value
-			Library.Window.AcrylicPaint.Model.Transparency = Value and 0.98 or 1
-			if Value then
-				Acrylic.Enable()
-			else
-				Acrylic.Disable()
-			end
-		end
-	end
-end
-
-function Library:ToggleTransparency(Value)
-	if Library.Window then
-		Library.Window.AcrylicPaint.Frame.Background.BackgroundTransparency = Value and 0.35 or 0
-	end
-end
-
-function Library:Notify(Config)
-	return NotificationModule:New(Config)
-end
-
-if getgenv then
-	getgenv().Fluent = Library
-else
-	Fluent = Library
-end
-
 if RunService:IsStudio() then
 	makefolder = function(...) return ... end;
 	makefile = function(...) return ... end;
@@ -5633,11 +5614,14 @@ end
 local InterfaceManager = {} do
 	InterfaceManager.Folder = "FluentSettings"
 	InterfaceManager.Settings = {
-		Theme = "Amethyst",
 		Acrylic = true,
 		Transparency = true,
 		MenuKeybind = "M"
 	}
+
+	function InterfaceManager:SetTheme(name)
+		InterfaceManager.Settings.Theme = name
+	end
 
 	function InterfaceManager:SetFolder(folder)
 		self.Folder = folder;
@@ -5693,7 +5677,6 @@ local InterfaceManager = {} do
 		InterfaceManager:LoadSettings()
 
 		local section = tab:AddSection("Interface")
-
 		local InterfaceTheme = section:AddDropdown("InterfaceTheme", {
 			Title = "Theme",
 			Description = "Changes the interface theme.",
@@ -5739,6 +5722,85 @@ local InterfaceManager = {} do
 		end)
 		Library.MinimizeKeybind = MenuKeybind
 	end
+end
+
+function Library:CreateWindow(Config)
+	assert(Config.Title, "Window - Missing Title")
+
+	if Library.Window then
+		print("You cannot create more than one window.")
+		return
+	end
+
+	Library.MinimizeKey = Config.MinimizeKey or Enum.KeyCode.LeftControl
+	Library.UseAcrylic = Config.Acrylic or false
+	Library.Acrylic = Config.Acrylic or false
+	Library.Theme = Config.Theme or "Dark"
+	if Config.Acrylic then
+		Acrylic.init()
+	end
+
+	local Window = Components.Window({
+		Parent = GUI,
+		Size = Config.Size,
+		Title = Config.Title,
+		SubTitle = Config.SubTitle,
+		TabWidth = Config.TabWidth,
+	})
+
+	Library.Window = Window
+	InterfaceManager:SetTheme(Config.Theme)
+	Library:SetTheme(Config.Theme)
+
+	return Window
+end
+
+function Library:SetTheme(Value)
+	if Library.Window and table.find(Library.Themes, Value) then
+		Library.Theme = Value
+		Creator.UpdateTheme()
+	end
+end
+
+function Library:Destroy()
+	if Library.Window then
+		Library.Unloaded = true
+		if Library.UseAcrylic then
+			Library.Window.AcrylicPaint.Model:Destroy()
+		end
+		Creator.Disconnect()
+		Library.GUI:Destroy()
+	end
+end
+
+function Library:ToggleAcrylic(Value)
+	if Library.Window then
+		if Library.UseAcrylic then
+			Library.Acrylic = Value
+			Library.Window.AcrylicPaint.Model.Transparency = Value and 0.98 or 1
+			if Value then
+				Acrylic.Enable()
+			else
+				Acrylic.Disable()
+			end
+		end
+	end
+end
+
+function Library:ToggleTransparency(Value)
+	if Library.Window then
+		Library.Window.AcrylicPaint.Frame.Background.BackgroundTransparency = Value and 0.35 or 0
+	end
+end
+
+function Library:Notify(Config)
+	return NotificationModule:New(Config)
+end
+
+if getgenv then
+	getgenv().Fluent = Library
+else
+	Fluent = Library
 end
 
 local Dragging, DragInput, MousePos, StartPos = false
