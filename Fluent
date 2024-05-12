@@ -1378,8 +1378,9 @@ Components.Element = (function()
 
 	local Spring = Flipper.Spring.new
 
-	return function(Title, Desc, Parent, Hover)
+	return function(Title, Desc, Parent, Hover, Options)
 		local Element = {}
+		local Options = Options or {}
 
 		Element.TitleLabel = New("TextLabel", {
 			FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
@@ -1440,6 +1441,7 @@ Components.Element = (function()
 		})
 
 		Element.Frame = New("TextButton", {
+			Visible = Options.Visible and Options.Visible or true,
 			Size = UDim2.new(1, 0, 0, 0),
 			BackgroundTransparency = 0.89,
 			BackgroundColor3 = Color3.fromRGB(130, 130, 130),
@@ -1461,6 +1463,10 @@ Components.Element = (function()
 
 		function Element:SetTitle(Set)
 			Element.TitleLabel.Text = Set
+		end
+
+		function Element:Visible(Bool)
+			Element.Frame.Visible = Bool
 		end
 
 		function Element:SetDesc(Set)
@@ -2866,7 +2872,7 @@ ElementsTable.Button = (function()
 		assert(Config.Title, "Button - Missing Title")
 		Config.Callback = Config.Callback or function() end
 
-		local ButtonFrame = Components.Element(Config.Title, Config.Description, self.Container, true)
+		local ButtonFrame = Components.Element(Config.Title, Config.Description, self.Container, true, Config)
 
 		local ButtonIco = New("ImageLabel", {
 			Image = "rbxassetid://10709791437",
@@ -2903,13 +2909,13 @@ ElementsTable.Toggle = (function()
 			Type = "Toggle",
 		}
 
-		local ToggleFrame = Components.Element(Config.Title, Config.Description, self.Container, true)
+		local ToggleFrame = Components.Element(Config.Title, Config.Description, self.Container, true, Config)
 		ToggleFrame.DescLabel.Size = UDim2.new(1, -54, 0, 14)
 
 		Toggle.SetTitle = ToggleFrame.SetTitle
 		Toggle.SetDesc = ToggleFrame.SetDesc
-		Toggle.GetTitle = ToggleFrame.GetTitle
-		Toggle.GetDesc = ToggleFrame.GetDesc
+		Toggle.Visible = ToggleFrame.Visible
+		Toggle.Elements = ToggleFrame
 
 		local ToggleCircle = New("ImageLabel", {
 			AnchorPoint = Vector2.new(0, 0.5),
@@ -3011,11 +3017,13 @@ ElementsTable.Dropdown = (function()
 			Dropdown.Value = {}
 		end
 
-		local DropdownFrame = Components.Element(Config.Title, Config.Description, self.Container, false)
+		local DropdownFrame = Components.Element(Config.Title, Config.Description, self.Container, false, Config)
 		DropdownFrame.DescLabel.Size = UDim2.new(1, -170, 0, 14)
 
 		Dropdown.SetTitle = DropdownFrame.SetTitle
 		Dropdown.SetDesc = DropdownFrame.SetDesc
+		Dropdown.Visible = DropdownFrame.Visible
+		Dropdown.Elements = DropdownFrame
 
 		local DropdownDisplay = New("TextLabel", {
 			FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
@@ -3489,12 +3497,14 @@ ElementsTable.Paragraph = (function()
 		assert(Config.Title, "Paragraph - Missing Title")
 		Config.Content = Config.Content or ""
 
-		local Paragraph = Components.Element(Config.Title, Config.Content, Paragraph.Container, false)
+		local Paragraph = Components.Element(Config.Title, Config.Content, Paragraph.Container, false, Config)
 		Paragraph.Frame.BackgroundTransparency = 0.92
 		Paragraph.Border.Transparency = 0.6
 
 		Paragraph.SetTitle = Paragraph.SetTitle
-		Paragraph.SetConetent = Paragraph.SetDesc
+		Paragraph.SetDesc = Paragraph.SetDesc
+		Paragraph.Visible = Paragraph.Visible
+		Paragraph.Elements = Paragraph
 
 		return Paragraph
 	end
@@ -3524,11 +3534,13 @@ ElementsTable.Slider = (function()
 
 		local Dragging = false
 
-		local SliderFrame = Components.Element(Config.Title, Config.Description, self.Container, false)
+		local SliderFrame = Components.Element(Config.Title, Config.Description, self.Container, false, Config)
 		SliderFrame.DescLabel.Size = UDim2.new(1, -170, 0, 14)
 
+		Slider.Elements = SliderFrame
 		Slider.SetTitle = SliderFrame.SetTitle
 		Slider.SetDesc = SliderFrame.SetDesc
+		Slider.Visible = SliderFrame.Visible
 
 		local SliderDot = New("ImageLabel", {
 			AnchorPoint = Vector2.new(0, 0.5),
@@ -3680,6 +3692,8 @@ ElementsTable.Keybind = (function()
 
 		Keybind.SetTitle = KeybindFrame.SetTitle
 		Keybind.SetDesc = KeybindFrame.SetDesc
+		Keybind.Visible = KeybindFrame.Visible
+		Keybind.Elements = KeybindFrame
 
 		local KeybindDisplayLabel = New("TextLabel", {
 			FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
@@ -3884,6 +3898,8 @@ ElementsTable.Colorpicker = (function()
 
 		Colorpicker.SetTitle = ColorpickerFrame.SetTitle
 		Colorpicker.SetDesc = ColorpickerFrame.SetDesc
+		Colorpicker.Visible = ColorpickerFrame.Visible
+		Colorpicker.Elements = ColorpickerFrame
 
 		local DisplayFrameColor = New("Frame", {
 			Size = UDim2.fromScale(1, 1),
@@ -4373,6 +4389,8 @@ ElementsTable.Input = (function()
 
 		Input.SetTitle = InputFrame.SetTitle
 		Input.SetDesc = InputFrame.SetDesc
+		Input.Visible = InputFrame.Visible
+		Input.Elements = InputFrame
 
 		local Textbox = Components.Textbox(InputFrame.Frame, true)
 		Textbox.Frame.Position = UDim2.new(1, -10, 0.5, 0)
@@ -4681,6 +4699,7 @@ local Icons = {
 	["lucide-cup-soda"] = "rbxassetid://10709818763",
 	["lucide-curly-braces"] = "rbxassetid://10709818847",
 	["lucide-currency"] = "rbxassetid://10709818931",
+	["lucide-container"] = "rbxassetid://17466205552"
 	["lucide-database"] = "rbxassetid://10709818996",
 	["lucide-delete"] = "rbxassetid://10709819059",
 	["lucide-diamond"] = "rbxassetid://10709819149",
@@ -4930,6 +4949,7 @@ local Icons = {
 	["lucide-list-plus"] = "rbxassetid://10723427334",
 	["lucide-list-start"] = "rbxassetid://10723427494",
 	["lucide-list-video"] = "rbxassetid://10723427619",
+	["lucide-list-todo"] = "rbxassetid://17376008003",
 	["lucide-list-x"] = "rbxassetid://10723433655",
 	["lucide-loader"] = "rbxassetid://10723434070",
 	["lucide-loader-2"] = "rbxassetid://10723433935",
@@ -5041,6 +5061,7 @@ local Icons = {
 	["lucide-pipette"] = "rbxassetid://10734922497",
 	["lucide-pizza"] = "rbxassetid://10734922774",
 	["lucide-plane"] = "rbxassetid://10734922971",
+	["lucide-plane-landing"] = "rbxassetid://17376029914",
 	["lucide-play"] = "rbxassetid://10734923549",
 	["lucide-play-circle"] = "rbxassetid://10734923214",
 	["lucide-plus"] = "rbxassetid://10734924532",
