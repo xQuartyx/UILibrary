@@ -3,6 +3,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local TextService = game:GetService("TextService")
 local Camera = game:GetService("Workspace").CurrentCamera
 local Mouse = LocalPlayer:GetMouse()
 local httpService = game:GetService("HttpService")
@@ -4718,6 +4719,7 @@ local Icons = {
 	["lucide-dollar-sign"] = "rbxassetid://10723343958",
 	["lucide-download"] = "rbxassetid://10723344270",
 	["lucide-download-cloud"] = "rbxassetid://10723344088",
+	["lucide-door-open"] = "rbxassetid://124179241653522",
 	["lucide-droplet"] = "rbxassetid://10723344432",
 	["lucide-droplets"] = "rbxassetid://10734883356",
 	["lucide-drumstick"] = "rbxassetid://10723344737",
@@ -5439,7 +5441,9 @@ local SaveManager = {} do
 			end
 		end
 
-		return true
+		Fluent.SettingLoaded = true
+
+		return true, decoded
 	end
 
 	function SaveManager:IgnoreThemeSettings()
