@@ -3012,6 +3012,7 @@ ElementsTable.Dropdown = (function()
 			Opened = false,
 			Type = "Dropdown",
 			Callback = Config.Callback or function() end,
+			Searchable = Config.Searchable or false
 		}
 
 		if Dropdown.Multi and Config.AllowNull then
@@ -3026,20 +3027,26 @@ ElementsTable.Dropdown = (function()
 		Dropdown.Visible = DropdownFrame.Visible
 		Dropdown.Elements = DropdownFrame
 
-		local DropdownDisplay = New("TextLabel", {
+		local DropdownDisplay = New("TextBox", {
 			FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
-			Text = "Value",
+			Text = "",
+			PlaceholderText = "Value",
+			PlaceholderColor3 = Color3.fromRGB(240, 240, 240),
 			TextColor3 = Color3.fromRGB(240, 240, 240),
-			TextSize = 13,
+			TextSize = 14,
+			AutomaticSize = Enum.AutomaticSize.Y,
+			TextYAlignment = Enum.TextYAlignment.Center,
 			TextXAlignment = Enum.TextXAlignment.Left,
-			Size = UDim2.new(1, -30, 0, 14),
+			Size = UDim2.new(1, -40, 0.5, 0),
 			Position = UDim2.new(0, 8, 0.5, 0),
 			AnchorPoint = Vector2.new(0, 0.5),
 			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
 			BackgroundTransparency = 1,
 			TextTruncate = Enum.TextTruncate.AtEnd,
+			Interactable = Dropdown.Searchable,
 			ThemeTag = {
 				TextColor3 = "Text",
+				PlaceholderColor3 = "Text"
 			},
 		})
 
@@ -3049,6 +3056,7 @@ ElementsTable.Dropdown = (function()
 			AnchorPoint = Vector2.new(1, 0.5),
 			Position = UDim2.new(1, -8, 0.5, 0),
 			BackgroundTransparency = 1,
+			Rotation = 180,
 			ThemeTag = {
 				ImageColor3 = "SubText",
 			},
@@ -3141,7 +3149,7 @@ ElementsTable.Dropdown = (function()
 		table.insert(Library.OpenFrames, DropdownHolderCanvas)
 
 		local function RecalculateListPosition()
-			local Add = 0
+			local Add = -40
 			if Camera.ViewportSize.Y - DropdownInner.AbsolutePosition.Y < DropdownHolderCanvas.AbsoluteSize.Y - 5 then
 				Add = DropdownHolderCanvas.AbsoluteSize.Y
 				- 5
@@ -3171,7 +3179,54 @@ ElementsTable.Dropdown = (function()
 		Creator.AddSignal(DropdownInner:GetPropertyChangedSignal("AbsolutePosition"), RecalculateListPosition)
 
 		Creator.AddSignal(DropdownInner.MouseButton1Click, function()
+			if Dropdown.Opened then
+				Dropdown:Close()
+				return
+			end
 			Dropdown:Open()
+		end)
+
+		Creator.AddSignal(DropdownDisplay:GetPropertyChangedSignal("Text"), function()
+			local Text = DropdownDisplay.Text
+			if #Text == 0 then
+				for _, Element in next, DropdownScrollFrame:GetChildren() do
+					if not Element:IsA("UIListLayout") then
+						local Value = Element.ButtonLabel.Text
+						local Similar = Value:lower():match(Text:lower()) or Value:lower() == Text:lower()
+						Element.Visible = true
+					end
+				end
+			end
+			for _, Element in next, DropdownScrollFrame:GetChildren() do
+				if not Element:IsA("UIListLayout") then
+					local Value = Element.ButtonLabel.Text
+					local Similar = Value:lower():match(Text:lower()) or Value:lower() == Text:lower()
+					Element.Visible = Similar and true or false
+				end
+			end
+			-- TweenService:Create(
+			-- 	DropdownHolderCanvas,
+			-- 	TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+			-- 	{ Size = UDim2.fromOffset(ListSizeX, DropdownListLayout.AbsoluteContentSize.Y + 10) }
+			-- ):Play()
+
+			RecalculateListPosition()
+			RecalculateListSize()
+		end)
+
+		Creator.AddSignal(DropdownDisplay.Focused, function()
+			DropdownDisplay.Text = ""
+		end)
+
+		Creator.AddSignal(DropdownDisplay.FocusLost, function(Enter, Input)
+			if #DropdownDisplay.Text > 0 then
+				local Tick = tick()
+				repeat wait() until tick() - Tick > 5 or DropdownDisplay:IsFocused()
+				if not DropdownDisplay:IsFocused() then
+					DropdownDisplay.Text = ""
+					Dropdown:Display()
+				end
+			end
 		end)
 
 		Creator.AddSignal(UserInputService.InputBegan, function(Input)
@@ -3194,6 +3249,7 @@ ElementsTable.Dropdown = (function()
 		local ScrollFrame = self.ScrollFrame
 		function Dropdown:Open()
 			Dropdown.Opened = true
+			DropdownDisplay.Interactable = Dropdown.Searchable and true or false
 			ScrollFrame.ScrollingEnabled = false
 			DropdownHolderCanvas.Visible = true
 			TweenService:Create(
@@ -3201,13 +3257,29 @@ ElementsTable.Dropdown = (function()
 				TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
 				{ Size = UDim2.fromScale(1, 1) }
 			):Play()
+			TweenService:Create(
+				DropdownIco,
+				TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+				{ Rotation = 0 }
+			):Play()
+			if Dropdown.Searchable then
+				DropdownDisplay:CaptureFocus()
+			end
 		end
 
 		function Dropdown:Close()
 			Dropdown.Opened = false
 			ScrollFrame.ScrollingEnabled = true
+			DropdownDisplay.Interactable = false
 			DropdownHolderFrame.Size = UDim2.fromScale(1, 0.6)
 			DropdownHolderCanvas.Visible = false
+			TweenService:Create(
+				DropdownIco,
+				TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+				{ Rotation = 180 }
+			):Play()
+			DropdownDisplay:ReleaseFocus(false)
+			Dropdown:Display()
 		end
 
 		function Dropdown:Display()
@@ -3225,7 +3297,7 @@ ElementsTable.Dropdown = (function()
 				Str = Dropdown.Value or ""
 			end
 
-			DropdownDisplay.Text = (Str == "" and "--" or Str)
+			DropdownDisplay.PlaceholderText = (Str == "" and "--" or Str)
 		end
 
 		function Dropdown:GetActiveValues()
@@ -3240,6 +3312,15 @@ ElementsTable.Dropdown = (function()
 			else
 				return Dropdown.Value and 1 or 0
 			end
+		end
+
+		function Dropdown:SetActiveValues(Value)
+			Dropdown.Value = Value
+
+			Library:SafeCallback(Dropdown.Callback, Dropdown.Value)
+			Library:SafeCallback(Dropdown.Changed, Dropdown.Value)
+
+			Dropdown:BuildDropdownList()
 		end
 
 		function Dropdown:BuildDropdownList()
@@ -3351,33 +3432,33 @@ ElementsTable.Dropdown = (function()
 					SetSelTransparency(Selected and 0 or 1)
 				end
 
-				ButtonLabel.InputBegan:Connect(function(Input)
-					if
-						Input.UserInputType == Enum.UserInputType.MouseButton1
-						or Input.UserInputType == Enum.UserInputType.Touch
-					then
-						local Try = not Selected
+				AddSignal(Button.Activated, function()
+					local Try = not Selected
 
-						if Dropdown:GetActiveValues() == 1 and not Try and not Config.AllowNull then
+					if Dropdown:GetActiveValues() == 1 and not Try and not Config.AllowNull then
+					else
+						if Config.Multi then
+							Selected = Try
+							Dropdown.Value[Value] = Selected and true or nil
 						else
-							if Config.Multi then
-								Selected = Try
-								Dropdown.Value[Value] = Selected and true or nil
-							else
-								Selected = Try
-								Dropdown.Value = Selected and Value or nil
+							Selected = Try
+							Dropdown.Value = Selected and Value or nil
 
-								for _, OtherButton in next, Buttons do
-									OtherButton:UpdateButton()
-								end
+							for _, OtherButton in next, Buttons do
+								OtherButton:UpdateButton()
 							end
-
-							Table:UpdateButton()
-							Dropdown:Display()
-
-							Library:SafeCallback(Dropdown.Callback, Dropdown.Value)
-							Library:SafeCallback(Dropdown.Changed, Dropdown.Value)
 						end
+
+						Table:UpdateButton()
+
+						if Dropdown.Searchable and #DropdownDisplay.Text > 0 then
+
+						else
+							Dropdown:Display()
+						end
+
+						Library:SafeCallback(Dropdown.Callback, Dropdown.Value)
+						Library:SafeCallback(Dropdown.Changed, Dropdown.Value)
 					end
 				end)
 
@@ -4503,6 +4584,7 @@ local Icons = {
 	["lucide-archive"] = "rbxassetid://10709762233",
 	["lucide-archive-restore"] = "rbxassetid://10709762058",
 	["lucide-armchair"] = "rbxassetid://10709762327",
+	["lucide-anvil"] = "rbxassetid://77943964625400",
 	["lucide-arrow-big-down"] = "rbxassetid://10747796644",
 	["lucide-arrow-big-left"] = "rbxassetid://10709762574",
 	["lucide-arrow-big-right"] = "rbxassetid://10709762727",
@@ -5261,6 +5343,7 @@ local Icons = {
 	["lucide-volume-1"] = "rbxassetid://10747375450",
 	["lucide-volume-2"] = "rbxassetid://10747375679",
 	["lucide-volume-x"] = "rbxassetid://10747375880",
+	["lucide-wheat"] = "rbxassetid://80877624162595",
 	["lucide-wallet"] = "rbxassetid://10747376205",
 	["lucide-wand"] = "rbxassetid://10747376565",
 	["lucide-wand-2"] = "rbxassetid://10747376349",
