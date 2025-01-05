@@ -366,6 +366,7 @@ local Library = {
 	Acrylic = false,
 	Transparency = true,
 	MinimizeKeybind = nil,
+	MinimizerIcon = nil,
 	MinimizeKey = Enum.KeyCode.LeftControl,
 }
 
@@ -540,9 +541,9 @@ function Spring:step(state, dt)
 		--    z = sin(a*c)/c
 		-- Take the Maclaurin expansion of z with respect to c:
 		--    z = a - (a^3*c^2)/6 + (a^5*c^4)/120 + O(c^6)
-		--    z ≈ a - (a^3*c^2)/6 + (a^5*c^4)/120
+		--    z â‰ˆ a - (a^3*c^2)/6 + (a^5*c^4)/120
 		-- Rewrite in Horner form:
-		--    z ≈ a + ((a*a)*(c*c)*(c*c)/20 - c*c)*(a*a*a)/6
+		--    z â‰ˆ a + ((a*a)*(c*c)*(c*c)/20 - c*c)*(a*a*a)/6
 
 		local z
 		if c > EPS then
@@ -5194,6 +5195,7 @@ local Icons = {
 	["lucide-scissors"] = "rbxassetid://10734942778",
 	["lucide-screen-share"] = "rbxassetid://10734943193",
 	["lucide-screen-share-off"] = "rbxassetid://10734942967",
+	["lucide-shell"] = "rbxassetid://83825045910816",
 	["lucide-scroll"] = "rbxassetid://10734943448",
 	["lucide-search"] = "rbxassetid://10734943674",
 	["lucide-send"] = "rbxassetid://10734943902",
@@ -5861,6 +5863,135 @@ function Library:CreateWindow(Config)
 	InterfaceManager:SetTheme(Config.Theme)
 	Library:SetTheme(Config.Theme)
 
+	local Dragging, DragInput, MousePos, StartPos = false
+
+	local MinimizeButton = New("TextButton", {
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 1, 0),
+		BorderSizePixel = 0
+	}, {
+		New("UIPadding", {
+			PaddingBottom = UDim.new(0, 2),
+			PaddingLeft = UDim.new(0, 2),
+			PaddingRight = UDim.new(0, 2),
+			PaddingTop = UDim.new(0, 2),
+		}),
+		New("ImageLabel", {
+			Image = Config.MinimizerIcon or "rbxassetid://17071506793",
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+		}, {
+			New("UIAspectRatioConstraint", {
+				AspectRatio = 1,
+				AspectType = Enum.AspectType.FitWithinMaxSize,
+			})
+		})
+	})
+
+	local Minimizer = New("Frame", {
+		Parent = GUI,
+		Size = UDim2.new(0, 32, 0, 32),
+		Position = UDim2.new(0.45, 0, 0.025, 0),
+		BackgroundTransparency = 1,
+		ZIndex = 999999999,
+	},
+	{
+		New("Frame", {
+			BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 0.5,
+			BorderSizePixel = 0
+		}, {
+			New("UICorner", {
+				CornerRadius = UDim.new(0.25, 0),
+			}),
+			MinimizeButton
+		})
+	})
+
+	Creator.AddSignal(Minimizer.InputBegan, function(Input)
+		if
+			Input.UserInputType == Enum.UserInputType.MouseButton1
+			or Input.UserInputType == Enum.UserInputType.Touch
+		then
+			Dragging = true
+			MousePos = Input.Position
+			StartPos = Minimizer.Position
+
+			Input.Changed:Connect(function()
+				if Input.UserInputState == Enum.UserInputState.End then
+					Dragging = false
+				end
+			end)
+		end
+	end)
+
+	Creator.AddSignal(MinimizeButton.InputBegan, function(Input)
+		if
+			Input.UserInputType == Enum.UserInputType.MouseButton1
+			or Input.UserInputType == Enum.UserInputType.Touch
+		then
+			Dragging = true
+			MousePos = Input.Position
+			StartPos = Minimizer.Position
+
+			Input.Changed:Connect(function()
+				if Input.UserInputState == Enum.UserInputState.End then
+					Dragging = false
+				end
+			end)
+		end
+	end)
+
+	Creator.AddSignal(MinimizeButton.InputChanged, function(Input)
+		if
+			Input.UserInputType == Enum.UserInputType.MouseMovement
+			or Input.UserInputType == Enum.UserInputType.Touch
+		then
+			DragInput = Input
+		end
+	end)
+	Creator.AddSignal(Minimizer.InputChanged, function(Input)
+		if
+			Input.UserInputType == Enum.UserInputType.MouseMovement
+			or Input.UserInputType == Enum.UserInputType.Touch
+		then
+			DragInput = Input
+		end
+	end)
+
+	Creator.AddSignal(UserInputService.InputChanged, function(Input)
+		if Input == DragInput and Dragging then
+			local GuiInset = game:GetService("GuiService"):GetGuiInset()
+			local Delta = Input.Position - MousePos
+			local ViewportSize = workspace.Camera.ViewportSize
+			local CurrentX = StartPos.X.Scale + (Delta.X/ViewportSize.X)
+			local CurrentY = StartPos.Y.Scale + (Delta.Y/ViewportSize.Y)
+
+			if CurrentX<0 or CurrentX > (ViewportSize.X - Minimizer.AbsoluteSize.X)/ViewportSize.X then
+				if CurrentX < 0 then
+					CurrentX = 0
+				else
+					CurrentX = (ViewportSize.X - Minimizer.AbsoluteSize.X)/ViewportSize.X
+				end
+			end
+
+			if CurrentY < 0 or CurrentY > ((ViewportSize.Y + GuiInset.Y) - Minimizer.AbsoluteSize.Y)/(ViewportSize.Y + GuiInset.Y) then
+				if CurrentY < 0 then
+					CurrentY = 0
+				else
+					CurrentY = ((ViewportSize.Y + GuiInset.Y) - Minimizer.AbsoluteSize.Y)/(ViewportSize.Y + GuiInset.Y)
+				end
+			end
+			
+			Minimizer.Position = UDim2.fromScale(CurrentX, CurrentY)
+		end
+	end)
+
+	AddSignal(MinimizeButton.MouseButton1Click, function()
+		Window:Minimize()
+	end)
+
 	return Window
 end
 
@@ -5911,134 +6042,5 @@ if getgenv then
 else
 	Fluent = Library
 end
-
-local Dragging, DragInput, MousePos, StartPos = false
-
-local MinimizeButton = New("TextButton", {
-	BackgroundTransparency = 1,
-	Size = UDim2.new(1, 0, 1, 0),
-	BorderSizePixel = 0
-}, {
-	New("UIPadding", {
-		PaddingBottom = UDim.new(0, 2),
-		PaddingLeft = UDim.new(0, 2),
-		PaddingRight = UDim.new(0, 2),
-		PaddingTop = UDim.new(0, 2),
-	}),
-	New("ImageLabel", {
-		Image = "rbxassetid://17071506793",
-		Size = UDim2.new(1, 0, 1, 0),
-		BackgroundTransparency = 1,
-	}, {
-		New("UIAspectRatioConstraint", {
-			AspectRatio = 1,
-			AspectType = Enum.AspectType.FitWithinMaxSize,
-		})
-	})
-})
-
-local Minimizer = New("Frame", {
-	Parent = GUI,
-	Size = UDim2.new(0, 32, 0, 32),
-	Position = UDim2.new(0.45, 0, 0.025, 0),
-	BackgroundTransparency = 1,
-	ZIndex = 999999999,
-},
-{
-	New("Frame", {
-		BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-		Size = UDim2.new(1, 0, 1, 0),
-		BackgroundTransparency = 0.5,
-		BorderSizePixel = 0
-	}, {
-		New("UICorner", {
-			CornerRadius = UDim.new(0.25, 0),
-		}),
-		MinimizeButton
-	})
-})
-
-Creator.AddSignal(Minimizer.InputBegan, function(Input)
-	if
-		Input.UserInputType == Enum.UserInputType.MouseButton1
-		or Input.UserInputType == Enum.UserInputType.Touch
-	then
-		Dragging = true
-		MousePos = Input.Position
-		StartPos = Minimizer.Position
-
-		Input.Changed:Connect(function()
-			if Input.UserInputState == Enum.UserInputState.End then
-				Dragging = false
-			end
-		end)
-	end
-end)
-
-Creator.AddSignal(MinimizeButton.InputBegan, function(Input)
-	if
-		Input.UserInputType == Enum.UserInputType.MouseButton1
-		or Input.UserInputType == Enum.UserInputType.Touch
-	then
-		Dragging = true
-		MousePos = Input.Position
-		StartPos = Minimizer.Position
-
-		Input.Changed:Connect(function()
-			if Input.UserInputState == Enum.UserInputState.End then
-				Dragging = false
-			end
-		end)
-	end
-end)
-
-Creator.AddSignal(MinimizeButton.InputChanged, function(Input)
-	if
-		Input.UserInputType == Enum.UserInputType.MouseMovement
-		or Input.UserInputType == Enum.UserInputType.Touch
-	then
-		DragInput = Input
-	end
-end)
-Creator.AddSignal(Minimizer.InputChanged, function(Input)
-	if
-		Input.UserInputType == Enum.UserInputType.MouseMovement
-		or Input.UserInputType == Enum.UserInputType.Touch
-	then
-		DragInput = Input
-	end
-end)
-
-Creator.AddSignal(UserInputService.InputChanged, function(Input)
-	if Input == DragInput and Dragging then
-		local GuiInset = game:GetService("GuiService"):GetGuiInset()
-		local Delta = Input.Position - MousePos
-		local ViewportSize = workspace.Camera.ViewportSize
-		local CurrentX = StartPos.X.Scale + (Delta.X/ViewportSize.X)
-		local CurrentY = StartPos.Y.Scale + (Delta.Y/ViewportSize.Y)
-
-		if CurrentX<0 or CurrentX > (ViewportSize.X - Minimizer.AbsoluteSize.X)/ViewportSize.X then
-			if CurrentX < 0 then
-				CurrentX = 0
-			else
-				CurrentX = (ViewportSize.X - Minimizer.AbsoluteSize.X)/ViewportSize.X
-			end
-		end
-
-		if CurrentY < 0 or CurrentY > ((ViewportSize.Y + GuiInset.Y) - Minimizer.AbsoluteSize.Y)/(ViewportSize.Y + GuiInset.Y) then
-			if CurrentY < 0 then
-				CurrentY = 0
-			else
-				CurrentY = ((ViewportSize.Y + GuiInset.Y) - Minimizer.AbsoluteSize.Y)/(ViewportSize.Y + GuiInset.Y)
-			end
-		end
-		
-		Minimizer.Position = UDim2.fromScale(CurrentX, CurrentY)
-	end
-end)
-
-AddSignal(MinimizeButton.MouseButton1Click, function()
-	Library.Window:Minimize()
-end)
 
 return Library, SaveManager, InterfaceManager
