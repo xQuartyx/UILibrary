@@ -5932,8 +5932,6 @@ local InterfaceManager = {} do
 		local Library = self.Library
 		local Settings = InterfaceManager.Settings
 
-		InterfaceManager:LoadSettings()
-
 		local section = tab:AddSection("Interface")
 		local InterfaceTheme = section:AddDropdown("InterfaceTheme", {
 			Title = "Theme",
@@ -5961,7 +5959,7 @@ local InterfaceManager = {} do
 				end
 			})
 		end
-
+		print(Library.Transparency)
 		section:AddToggle("TransparentToggle", {
 			Title = "Transparency",
 			Description = "Makes the interface transparent.",
@@ -5979,6 +5977,8 @@ local InterfaceManager = {} do
 			InterfaceManager:SaveSettings()
 		end)
 		Library.MinimizeKeybind = MenuKeybind
+
+		InterfaceManager:LoadSettings()
 	end
 end
 
@@ -5994,6 +5994,7 @@ function Library:CreateWindow(Config)
 	Library.UseAcrylic = Config.Acrylic or false
 	Library.Acrylic = Config.Acrylic or false
 	Library.Theme = Config.Theme or "Dark"
+	Library.Transparency = Config.Transparency or false
 	if Config.Acrylic then
 		Acrylic.init()
 	end
