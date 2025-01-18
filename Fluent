@@ -5959,7 +5959,7 @@ local InterfaceManager = {} do
 				end
 			})
 		end
-		print(Library.Transparency)
+		
 		section:AddToggle("TransparentToggle", {
 			Title = "Transparency",
 			Description = "Makes the interface transparent.",
