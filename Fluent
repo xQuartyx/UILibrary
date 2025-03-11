@@ -3396,6 +3396,7 @@ ElementsTable.Dropdown = (function()
 
 		local ScrollFrame = self.ScrollFrame
 		function Dropdown:Open()
+			Library:SafeCallback(Dropdown.OpenedFunc)
 			Dropdown.Opened = true
 			DropdownDisplay.Interactable = Dropdown.Searchable and true or false
 			ScrollFrame.ScrollingEnabled = false
@@ -3638,6 +3639,10 @@ ElementsTable.Dropdown = (function()
 			Dropdown:BuildDropdownList()
 		end
 
+		function Dropdown:OnOpened(Func)
+			Dropdown.OpenedFunc = Func
+		end
+
 		function Dropdown:OnChanged(Func)
 			Dropdown.Changed = Func
 			Func(Dropdown.Value)
@@ -3663,7 +3668,7 @@ ElementsTable.Dropdown = (function()
 			end
 
 			Dropdown:BuildDropdownList()
-
+			
 			Library:SafeCallback(Dropdown.Callback, Dropdown.Value)
 			Library:SafeCallback(Dropdown.Changed, Dropdown.Value)
 		end
