@@ -108,6 +108,7 @@ local Themes = {
 		Input = Color3.fromRGB(27, 27, 27),
 		InputFocused = Color3.fromRGB(51, 51, 51),
 		InputIndicator = Color3.fromRGB(197, 184, 161),
+		InputIndicatorFocus = Color3.fromRGB(197, 184, 161),
 
 		Dialog = Color3.fromRGB(38, 38, 38),
 		DialogHolder = Color3.fromRGB(58, 52, 46),
@@ -154,6 +155,7 @@ local Themes = {
 		Input = Color3.fromHex("#180030"),
 		InputFocused = Color3.fromHex("#180030"),
 		InputIndicator = Color3.fromHex("#9e85ad"),
+		InputIndicatorFocus = Color3.fromHex("#9e85ad"),
 
 		Dialog = Color3.fromHex("#25013c"),
 		DialogHolder = Color3.fromHex("#120024"),
@@ -1060,6 +1062,7 @@ end
 function Creator.UpdateTheme()
 	for Instance, Object in next, Creator.Registry do
 		for Property, ColorIdx in next, Object.Properties do
+			print(Property, ColorIdx)
 			Instance[Property] = Creator.GetThemeProperty(ColorIdx)
 		end
 	end
@@ -4609,14 +4612,16 @@ ElementsTable.Input = (function()
 	Element.__type = "Input"
 
 	function Element:New(Idx, Config)
+		local Library = self.Library
 		assert(Config.Title, "Input - Missing Title")
 		Config.Callback = Config.Callback or function() end
 
 		local Input = {
-			Value = Config.Default or "",
+			Value = Config.Default or Config.Value or "",
 			Numeric = Config.Numeric or false,
 			Finished = Config.Finished or false,
 			Callback = Config.Callback or function(Value) end,
+			ClearOnFocusLost = Config.ClearOnFocusLost or false,
 			Type = "Input",
 		}
 
@@ -4624,8 +4629,6 @@ ElementsTable.Input = (function()
 
 		Input.SetTitle = InputFrame.SetTitle
 		Input.SetDesc = InputFrame.SetDesc
-		Input.Visible = InputFrame.Visible
-		Input.Elements = InputFrame
 
 		local Textbox = Components.Textbox(InputFrame.Frame, true)
 		Textbox.Frame.Position = UDim2.new(1, -10, 0.5, 0)
@@ -4647,19 +4650,28 @@ ElementsTable.Input = (function()
 				end
 			end
 
-			Input.Value = Text
+			rawset(Input, "Value", Text)
 			Box.Text = Text
 
-			Library:SafeCallback(Input.Callback, Input.Value)
-			Library:SafeCallback(Input.Changed, Input.Value)
+			if typeof(Input.Callback) == "function" then
+				Library:SafeCallback(Input.Callback, Input.Value)
+			end
+			if typeof(Input.Changed) == "function" then
+				Library:SafeCallback(Input.Changed, Input.Value)
+			end
 		end
 
 		if Input.Finished then
-			AddSignal(Box.FocusLost, function(enter)
+			AddSignal(Box.FocusLost, function(enter: boolean, input: InputObject)
 				if not enter then
 					return
 				end
+
 				Input:SetValue(Box.Text)
+
+				if Config.ClearOnFocusLost then
+					Box.Text = ""
+				end
 			end)
 		else
 			AddSignal(Box:GetPropertyChangedSignal("Text"), function()
@@ -4669,7 +4681,7 @@ ElementsTable.Input = (function()
 
 		function Input:OnChanged(Func)
 			Input.Changed = Func
-			Func(Input.Value)
+			Library:SafeCallback(Func, Input.Value, Input.Value)
 		end
 
 		function Input:Destroy()
@@ -4678,7 +4690,17 @@ ElementsTable.Input = (function()
 		end
 
 		Library.Options[Idx] = Input
-		return Input
+
+		Input.Instance = InputFrame
+
+		return setmetatable(Input, {
+			__newindex =  function(self, index, newvalue)
+				if index == "Value" then
+					task.spawn(Input.SetValue, Input, newvalue)
+				end
+				rawset(self, index, newvalue)
+			end
+		})
 	end
 
 	return Element
