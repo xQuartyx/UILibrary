@@ -1062,7 +1062,6 @@ end
 function Creator.UpdateTheme()
 	for Instance, Object in next, Creator.Registry do
 		for Property, ColorIdx in next, Object.Properties do
-			print(Property, ColorIdx)
 			Instance[Property] = Creator.GetThemeProperty(ColorIdx)
 		end
 	end
